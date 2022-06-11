@@ -16,7 +16,6 @@ const employee = [
 const customers = [
     {
         "customer_code": 1,
-        "emp_code": 1,
         "mobile_no": "+919848484938",
         "name": "Customer 1",
         "address": "12",
@@ -26,7 +25,6 @@ const customers = [
     },
     {
         "customer_code": 2,
-        "emp_code": 1,
         "mobile_no": "+919848484938",
         "name": "Customer 2",
         "address": "12",

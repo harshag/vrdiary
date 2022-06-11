@@ -1,7 +1,7 @@
 import React from 'react'
 import { StyleSheet, FlatList, View, Text } from 'react-native'
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Provider } from 'react-native-paper';
+import { Provider, FAB } from 'react-native-paper';
 
 import InvoiceItemComponent from '../components/InvoiceItemComponent';
 import MenuComponent from '../components/MenuComponent';
@@ -86,10 +86,10 @@ function InvoiceScreen({navigation}) {
         <View style={styles.invoiceDetailsContainer}>
           <View style={styles.menuContainer}>
             <View style={{marginRight: 10}}>
-              <MenuComponent title={customerMenuTitle} items={customerMenuItems} onSelect={customerMenuCb}/>
+              <MenuComponent title={customerMenuTitle} items={customerMenuItems} onSelect={customerMenuCb} key={"customerMenu"} />
             </View>
             <View style={{marginRight: 10}}>
-              <MenuComponent title={invoiceMenuTitle} items={invoiceMenuItems} onSelect={invoiceMenuCb}/>
+              <MenuComponent title={invoiceMenuTitle} items={invoiceMenuItems} onSelect={invoiceMenuCb} key={"invoiceMenu"} />
             </View>
           </View>
           <View>
@@ -105,6 +105,12 @@ function InvoiceScreen({navigation}) {
           <Text>Total Amount</Text>
           <Text>Total Amount</Text>
         </View> */}
+        <FAB
+          style={styles.fab}
+          medium
+          icon="plus"
+          onPress={() => navigation.navigate("AddInvoice")}
+        />
       </SafeAreaProvider>
     </Provider>
   );
@@ -127,6 +133,12 @@ const styles = StyleSheet.create({
   },
   invoiceSummary: {
     backgroundColor: '#f3f3f3'
+  },
+  fab: {
+    position: 'absolute',
+    margin: 16,
+    right: 0,
+    bottom: 0,
   }
 });
 

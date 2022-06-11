@@ -22,8 +22,8 @@ function MenuComponent(props) {
           <Menu
             visible={menuVisible}
             onDismiss={closeMenu}
-            anchor={<Button onPress={openMenu} style={styles.menuButton}>{props.title}</Button>}
-            style={styles.menuDropdown} >
+            anchor={<Button onPress={openMenu} style={{...styles.menuButton, ...props.customStyle}}>{props.title}</Button>}
+            style={{...styles.menuDropdown}} >
             {
               props.items.map(item => {
                 return <Menu.Item key={item.id} title={item.name} onPress={() => {menuSelected(item)}}/>
@@ -41,7 +41,6 @@ const styles = StyleSheet.create({
     menuButton: {
         backgroundColor: '#f3f3f3',
         minWidth: 150,
-        maxWidth: 150
     },
     menuDropdown: {
         position: 'absolute',

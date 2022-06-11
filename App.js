@@ -5,6 +5,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import LoginScreen from './src/screens/LoginScreen';
 import InvoiceScreen from './src/screens/InvoiceScreen';
+import AddInvoiceScreen from './src/screens/AddInvoiceScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -14,6 +15,7 @@ export default function App() {
       <Stack.Navigator initialRouteName="Invoice">
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Invoice" component={InvoiceScreen} />
+        <Stack.Screen name="AddInvoice" component={AddInvoiceScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
