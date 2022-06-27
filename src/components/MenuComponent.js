@@ -1,6 +1,6 @@
 import React from 'react'
 import { StyleSheet, View } from 'react-native';
-import { Button, Menu, DiviDer } from 'react-native-paper';
+import { Button, Menu } from 'react-native-paper';
 
 function MenuComponent(props) {
     const [menuVisible, setMenuVisible] = React.useState(false)

@@ -1,79 +1,73 @@
-import React from 'react'
+import { useState, useEffect, useLayoutEffect } from 'react'
 import { StyleSheet, FlatList, View, Text } from 'react-native'
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Provider, FAB } from 'react-native-paper';
+import { Provider, Button } from 'react-native-paper';
 
 import InvoiceItemComponent from '../components/InvoiceItemComponent';
 import MenuComponent from '../components/MenuComponent';
 
-import { invoiceData, allInvoiceDetails, invoiceItems }  from '../mockData/InvoiceData'
-
-function getCustomers() {
-  let customers = []
-
-  for (const index in allInvoiceDetails) {
-    let customer = {
-      id: allInvoiceDetails[index].customer.code,
-      name: allInvoiceDetails[index].customer.name,
-      invoiceId: allInvoiceDetails[index].invoice_id
-    }
-
-    customers.push(customer)
-  }
-
-  return customers;
-  
-}
-
-async function getAllInvoices(customer) {
-  let allInvoiceData = invoiceItems.filter((invoice) => {
-    return invoice.sales_invoice === customer.invoiceId
-  });
-
-  return allInvoiceData;
-}
-
-async function getOneInvoice(invoiceId) {
-  let invoice = invoiceItems.filter((invoice) => {
-    return invoice.sales_invoice === invoiceId
-  });
-
-  return invoice;
-}
+import * as restClient from '../lib/restclient';
 
 function InvoiceScreen({navigation}) {
-  const [invoiceMenuItems, setinvoiceMenuItems] = React.useState([]);
-  const [invoiceMenuTitle, setInvoiceMenuTitle] = React.useState("Invoices");
-  const [customerMenuTitle, setCustomerMenuTitle] = React.useState("Customers");
-  const [invoice, setInvoice] = React.useState([]);
+  const [invoiceMenuItems, setinvoiceMenuItems] = useState([]);
+  const [invoiceMenuTitle, setInvoiceMenuTitle] = useState("Invoices");
+  const [customerMenuTitle, setCustomerMenuTitle] = useState("Customers");
+  const [customers, setCustomers] = useState([]);
+  const [invoice, setInvoice] = useState([]);
+  const [selectedInvoice, setSelectedInvoice] = useState({});
+  const [selectedCustomer, setSelectedCustomer] = useState({});
 
-  let customerMenuItems = getCustomers()
-
-  async function customerMenuCb (selectedItem) {
-    let invoices = await getAllInvoices(selectedItem);
-
-    let invoiceItems = invoices.map(invoice => {
-      let item = {
-        id: invoice.sales_invoice,
-        name: invoice.sales_invoice
-      }
-      return item
+  useLayoutEffect(() => {
+    navigation.setOptions({
+        headerRight: () => (
+            <Button onPress={() => navigation.navigate("AddInvoice")}>Create Invoice</Button>
+        )
     });
+  }, [navigation]);
+  
+  useEffect(() => {
+      restClient.getCustomers()
+      .then((items) => {
+        setCustomers(items);
+      }).catch((error) => {
+        console.log("Error fetching customers: ", error.message);
+        if(error.response.status === 401) {
+          navigation.navigate("Login");
+        };
+      });
 
-    setinvoiceMenuItems(invoiceItems);
-    setCustomerMenuTitle(selectedItem.name);
+  }, []);
+
+  async function customerMenuCb (selectedCustomer) {
+    setSelectedCustomer(selectedCustomer);
+    let invoices = [];
+    try {
+      invoices = await restClient.getAllInvoices(selectedCustomer);
+    } catch(error) {
+      if(error.response.status === 401) {
+        navigation.navigate("Login");
+      };
+    }
+
+    setinvoiceMenuItems(invoices);
+    setCustomerMenuTitle(selectedCustomer.name);
     setInvoice([]);
     setInvoiceMenuTitle("Invoices");
   }
 
-  async function invoiceMenuCb(selectedItem) {
-    let invoice = await getOneInvoice(selectedItem.id);
-    
-    console.log(selectedItem);
-    console.log(invoice);
+  async function invoiceMenuCb(selectedInvoice) {
+    setSelectedInvoice(selectedInvoice);
+    let invoice = {}
+    try {
+      invoice = await restClient.getOneInvoice(selectedInvoice.id);
+    } catch(error) {
+      if(error.response.status === 401) {
+        navigation.navigate("Login");
+      };
+    }
 
     setInvoice(invoice);
-    setInvoiceMenuTitle(selectedItem.name);
+    setInvoiceMenuTitle(selectedInvoice.name);
   }
 
   const renderItem = ({item}) => (
@@ -86,31 +80,52 @@ function InvoiceScreen({navigation}) {
         <View style={styles.invoiceDetailsContainer}>
           <View style={styles.menuContainer}>
             <View style={{marginRight: 10}}>
-              <MenuComponent title={customerMenuTitle} items={customerMenuItems} onSelect={customerMenuCb} key={"customerMenu"} />
+              <MenuComponent title={customerMenuTitle} items={customers} onSelect={customerMenuCb} key={"customerMenu"} />
             </View>
             <View style={{marginRight: 10}}>
               <MenuComponent title={invoiceMenuTitle} items={invoiceMenuItems} onSelect={invoiceMenuCb} key={"invoiceMenu"} />
             </View>
           </View>
-          <View>
+          <View style={styles.invoiceItems}>
             <FlatList
               data={invoice}
               renderItem = {renderItem}
-              keyExtractor = {item => item.sales_invoice}
+              keyExtractor = {item => item.item_code}
             />
           </View>
         </View>
-        {/* <View style={[styles.invoiceSummary, {height: invoice.length > 0 ? 150 : 0}]}>
-          <Text>Total Amount</Text>
-          <Text>Total Amount</Text>
-          <Text>Total Amount</Text>
-        </View> */}
-        <FAB
-          style={styles.fab}
-          medium
-          icon="plus"
-          onPress={() => navigation.navigate("AddInvoice")}
-        />
+        {invoice.length > 0 ? <View style={[styles.invoiceSummaryContainer]}>
+          <View style={styles.itemTextLeftContainer}>
+            <Text style={{...styles.itemText, fontWeight: 'bold', fontSize: 18}}>
+              Total Amount
+            </Text>
+          </View>
+          <View style={styles.itemTextRightContainer}>
+            <Text style={{...styles.itemText, fontWeight: 'bold', fontSize: 18}}>
+              {selectedInvoice.total}
+            </Text>
+          </View>
+          <View style={styles.itemTextLeftContainer}>
+            <Text style={{...styles.itemText, fontWeight: 'bold', fontSize: 14}}>
+              Receved Amount
+            </Text>
+          </View>
+          <View style={styles.itemTextRightContainer}>
+            <Text style={{...styles.itemText, fontWeight: 'bold', fontSize: 14}}>
+              {selectedInvoice.amount_received}
+            </Text>
+          </View>
+          <View style={styles.itemTextLeftContainer}>
+            <Text style={{...styles.itemText, fontWeight: 'bold', fontSize: 14}}>
+              Balance
+            </Text>
+          </View>
+          <View style={styles.itemTextRightContainer}>
+            <Text style={{...styles.itemText, fontWeight: 'bold', fontSize: 14}}>
+              {(selectedInvoice.total - selectedInvoice.amount_received) || 0}
+            </Text>
+          </View>
+        </View> : null}
       </SafeAreaProvider>
     </Provider>
   );
@@ -129,10 +144,37 @@ const styles = StyleSheet.create({
     marginBottom: 10
   },
   invoiceDetailsContainer: {
-    flex: 1
+    flex: 1,
+    height: "88%",
   },
-  invoiceSummary: {
-    backgroundColor: '#f3f3f3'
+  invoiceItems: {
+      height: '92%'
+  },
+  invoiceSummaryContainer: {
+      backgroundColor: '#f3f3f3',
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      marginTop: 10,
+      padding: 10,
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: '#ededed',
+      height: 100
+    },
+  itemTextLeftContainer: {
+      width: '60%',
+      alignContent: 'flex-start'
+  },
+  itemTextRightContainer: {
+      width: '40%',
+      alignItems: 'flex-end'
+  },
+  itemText: {
+      margin: 3,
+      fontSize: 15,
+      color: '#87888D'
   },
   fab: {
     position: 'absolute',

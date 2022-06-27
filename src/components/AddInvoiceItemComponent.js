@@ -1,32 +1,38 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 import { Button, Modal, Portal, TextInput } from 'react-native-paper';
 
 import MenuComponent from './MenuComponent';
-import { allItems }  from '../mockData/InvoiceData'
+import * as restClient from '../lib/restclient';
 
 function AddInvoiceItemComponent(props) {
-    const [selectedItem, setSelectedItem] = useState("");
+    const [selectedItem, setSelectedItem] = useState({});
     const [itemPrice, setItemPrice] = useState("");
     const [qty, setQty] = useState("");
     const [freeQty, setFreeQty] = useState("");
     const [modalVisible, setModalVisible] = useState(props.showModal);
+    const [errorMessage, setErrorMessage] = useState("");
+
+    const [items, setItems] = useState([]);
     
     const hideModal = () => {
-        setModalVisible(false);
+        props.showModal(false);
+        setSelectedItem({});
     }
 
-    function getAllItems() {
-        let items = allItems.map(item => {
-            return {
-                id: item.item_code,
-                name: item.item_name,
-                price: item.price
-            }
-        });
-        
-        return items;
-    }
+    useEffect(() => {
+        restClient.getAllItems()
+          .then((items) => {
+            let mappedItems = items.map(item => {
+                return {
+                    ...item,
+                    id: item.item_code,
+                    name: item.item_name
+                }
+            });
+            setItems(mappedItems);
+          });
+    }, []);
       
     function itemsMenuCb (selectedItem) {
         setSelectedItem(selectedItem);
@@ -34,17 +40,31 @@ function AddInvoiceItemComponent(props) {
     }
 
     function handleAddItem() {
-        console.log("Item Added");
+        if (selectedItem.name === "" || qty === "") {
+            setErrorMessage("Enter all values");
+            return;
+        }
+        props.addItems({
+            item: {
+                ...selectedItem
+            },
+            quantity: qty,
+            free_quantity: freeQty,
+            price: selectedItem.price,
+            amount: selectedItem.price * qty
+        });
+
+        hideModal();
     }
 
     return (
         <View style={styles.container}>
             <Portal>
-                <Modal visible={props.showModal} onDismiss={hideModal} contentContainerStyle={styles.container}>
+                <Modal dismissable={false} visible={props.visible} onDismiss={hideModal} contentContainerStyle={styles.container}>
                     <View>
                         <MenuComponent 
                             title={selectedItem.name || "Select Item"}
-                            items={getAllItems()}
+                            items={items}
                             onSelect={itemsMenuCb}
                             key={"itemMenu"}
                             customStyle={{marginBottom: 10}}
@@ -70,7 +90,11 @@ function AddInvoiceItemComponent(props) {
                             keyboardType='numeric'
                             mode={'outlined'}
                         />
-                        <Button onPress={handleAddItem}>Save</Button>
+                        <View style={styles.formButtons}>
+                            <Button onPress={handleAddItem}>Add</Button>
+                            <Button onPress={hideModal}>Cancel</Button>
+                        </View>
+                        <Text style={{color: "tomato"}}>{errorMessage}</Text>
                     </View>
                 </Modal>
             </Portal>
@@ -86,6 +110,12 @@ const styles = StyleSheet.create({
     input: {
         marginTop: 10,
         marginBottom: 10
+    },
+    formButtons: {
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        margin: 5
     }
 });
 

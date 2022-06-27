@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { View, StyleSheet } from 'react-native'
-import { Button, Modal, Portal, TextInput } from 'react-native-paper';
+import { Button, Modal, Portal, TextInput, Text } from 'react-native-paper';
+import * as restClient from '../lib/restclient';
 
 function AddCustomerComponent(props) {
     const [customerName, setCustomerName] = useState("");
@@ -8,20 +9,50 @@ function AddCustomerComponent(props) {
     const [customerArea, setCustomerArea] = useState("");
     const [customerCity, setCustomerCity] = useState("");
     const [customerPhone, setCustomerPhone] = useState("");
-    const [modalVisible, setModalVisible] = useState(props.showModal);
+    const [errorMessage, setErrorMessage] = useState("");
     
-    const hideModal = () => {
-        setModalVisible(false);
-    }
+    const resetForm = () => {
+        setCustomerName("");
+        setCustomerAddress("");
+        setCustomerArea("");
+        setCustomerCity("");
+        setCustomerPhone("");
+        setErrorMessage("");
+    };
 
-    function handleAddCustomer() {
-        console.log("Customer Added");
+    const hideModal = () => {
+        props.showModal(false);
+        resetForm();
+    };
+
+    async function handleAddCustomer() {
+        let reqBody = {
+            "name": customerName,
+            "address": customerAddress,
+            "area_name": customerArea,
+            "city": customerCity,
+            "mobile_no": customerPhone
+        }
+        try {
+            let res = await restClient.createCustomer(reqBody);
+            let customerObj = {
+                ...res.data,
+                id: res.code
+            }
+            props.returnCustomer(customerObj);
+            hideModal();
+        } catch(error) {
+            if(error.response.status === 400) {
+                setErrorMessage("Please enter all values");
+            }
+            console.log("Error creating customer: ", error);
+        }
     }
 
     return (
         <View style={styles.container}>
             <Portal>
-                <Modal visible={props.showModal} onDismiss={hideModal} contentContainerStyle={styles.container}>
+                <Modal dismissable={false} visible={props.visible} onDismiss={hideModal} contentContainerStyle={styles.container}>
                     <View>
                         <TextInput style={styles.input}
                             label={"Customer Name"}
@@ -55,7 +86,11 @@ function AddCustomerComponent(props) {
                             onChangeText={customerPhone => setCustomerPhone(customerPhone)}
                             keyboardType={'numeric'}
                         />
-                        <Button onPress={handleAddCustomer}>Save</Button>
+                        <Text style={{color: "tomato"}}>{errorMessage}</Text>
+                        <View style={styles.formButtons}>
+                            <Button onPress={handleAddCustomer}>Add</Button>
+                            <Button onPress={hideModal}>Cancel</Button>
+                        </View>
                     </View>
                 </Modal>
             </Portal>
@@ -71,6 +106,12 @@ const styles = StyleSheet.create({
     input: {
         marginTop: 10,
         marginBottom: 10
+    },
+    formButtons: {
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        margin: 5
     }
 });
 

@@ -4,7 +4,7 @@ import { View, Text, StyleSheet } from 'react-native'
 function InvoiceItemComponent(invoiceItem) {
   let item = invoiceItem;
   let totalPrice = item.invoiceItem.quantity * item.invoiceItem.price;
-  console.log(item);
+  
   return (
     <View style={styles.container}>
       <View style={styles.singleInvoiceContainer}>
@@ -40,12 +40,22 @@ function InvoiceItemComponent(invoiceItem) {
         </View>
         <View style={styles.itemTextLeftContainer}>
           <Text style={styles.itemText}>
-            Tax GST: {item.invoiceItem.item.tax_code.tax_type} {item.invoiceItem.item.tax_code.tax_percent}
+            Tax GST:
           </Text>
         </View>
         <View style={styles.itemTextRightContainer}>
           <Text style={styles.itemText}>
-            {totalPrice}
+            {item.invoiceItem.item.tax_code.tax_type} {item.invoiceItem.item.tax_code.tax_percent}
+          </Text>
+        </View>
+        <View style={styles.itemTextLeftContainer}>
+          <Text style={styles.itemText}>
+            Total Amount:
+          </Text>
+        </View>
+        <View style={styles.itemTextRightContainer}>
+          <Text style={styles.itemText}>
+            {item.invoiceItem.amount}
           </Text>
         </View>
       </View>
