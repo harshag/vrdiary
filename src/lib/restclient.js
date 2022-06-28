@@ -1,5 +1,7 @@
 import axios from "axios";
 import * as SecureStore from 'expo-secure-store';
+import moment from "moment";
+import AppConstants from "../../AppConstants";
 
 const restClient = axios.create({
     baseURL: "https://vrdairy.herokuapp.com"
@@ -22,8 +24,13 @@ const login = async (username, password) => {
         username: username.trim(),
         password: password
     };
-
-    const response = await restClient.post('/api/token/', apiRequest);
+    let response = {};
+    try {
+        response = await restClient.post('/api/token/', apiRequest);
+    } catch(error) {
+        console.log("Error when requesting token: ", error);
+        throw error;
+    }
 
     return response;
 }
@@ -36,7 +43,7 @@ async function getCustomers() {
     try {
       response = await restClient.get('/api/customer/', {
           headers: {
-            Authorization: `Bearer ${token.access}`
+            Authorization: `Bearer ${token?.access}`
           }
       });
 
@@ -65,7 +72,7 @@ async function getAllInvoices(selectedCustomer) {
         try {
             response = await restClient.get(`/api/invoice/?customer=${selectedCustomer.id}`, {
                 headers: {
-                    Authorization: `Bearer ${token.access}`
+                    Authorization: `Bearer ${token?.access}`
             }
         });
         } catch(error) {
@@ -78,7 +85,7 @@ async function getAllInvoices(selectedCustomer) {
                 return {
                 ...invoice,
                 id: invoice.invoice_id,
-                name: `Id: ${invoice.invoice_id}, Date: ${invoice.invoice_date}`
+                name: `Id: ${invoice.invoice_id}, Date: ${moment(invoice.invoice_date, AppConstants.serverDateFormat).format(AppConstants.dateFormat)}`
                 };
             });
         }
@@ -99,7 +106,7 @@ async function getOneInvoice(invoiceId) {
     try {
         response = await restClient.get(`/api/invoiceitems/?sales_invoice=${invoiceId}`, {
             headers: {
-                Authorization: `Bearer ${token.access}`
+                Authorization: `Bearer ${token?.access}`
             }
         });
     } catch(error) {
@@ -122,7 +129,7 @@ async function getAllItems() {
     try {
         response = await restClient.get('/api/item/', {
             headers: {
-                Authorization: `Bearer ${token.access}`
+                Authorization: `Bearer ${token?.access}`
             }
         });
     } catch(error) {
@@ -143,15 +150,14 @@ async function createInvoice (invoiceData) {
     try {
         response = await restClient.post('/api/invoice/', invoiceData, {
             headers: {
-                Authorization: `Bearer ${token.access}`
+                Authorization: `Bearer ${token?.access}`
             }
         });
-        console.log(response);
     } catch(error) {
         console.log(error.response);
         throw error;
     }
-
+    
     return response;
 }
 
@@ -163,7 +169,7 @@ async function createCustomer(data) {
     try {
       response = await restClient.post('/api/customer/', data, {
           headers: {
-            Authorization: `Bearer ${token.access}`
+            Authorization: `Bearer ${token?.access}`
           }
       });
 

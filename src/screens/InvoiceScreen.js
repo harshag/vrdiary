@@ -5,6 +5,7 @@ import { Provider, Button } from 'react-native-paper';
 
 import InvoiceItemComponent from '../components/InvoiceItemComponent';
 import MenuComponent from '../components/MenuComponent';
+import AppConstants from '../../AppConstants';
 
 import * as restClient from '../lib/restclient';
 
@@ -16,14 +17,6 @@ function InvoiceScreen({navigation}) {
   const [invoice, setInvoice] = useState([]);
   const [selectedInvoice, setSelectedInvoice] = useState({});
   const [selectedCustomer, setSelectedCustomer] = useState({});
-
-  useLayoutEffect(() => {
-    navigation.setOptions({
-        headerRight: () => (
-            <Button onPress={() => navigation.navigate("AddInvoice")}>Create Invoice</Button>
-        )
-    });
-  }, [navigation]);
   
   useEffect(() => {
       restClient.getCustomers()
@@ -61,6 +54,7 @@ function InvoiceScreen({navigation}) {
     try {
       invoice = await restClient.getOneInvoice(selectedInvoice.id);
     } catch(error) {
+      console.log('Error in InvoiceMenu selection: ', error);
       if(error.response.status === 401) {
         navigation.navigate("Login");
       };
@@ -90,7 +84,7 @@ function InvoiceScreen({navigation}) {
             <FlatList
               data={invoice}
               renderItem = {renderItem}
-              keyExtractor = {item => item.item_code}
+              keyExtractor = {(item, index) => `${item.item_code}+${index}`}
             />
           </View>
         </View>
@@ -102,7 +96,7 @@ function InvoiceScreen({navigation}) {
           </View>
           <View style={styles.itemTextRightContainer}>
             <Text style={{...styles.itemText, fontWeight: 'bold', fontSize: 18}}>
-              {selectedInvoice.total}
+              {AppConstants.currencySymbol}{selectedInvoice.total}
             </Text>
           </View>
           <View style={styles.itemTextLeftContainer}>
@@ -112,7 +106,7 @@ function InvoiceScreen({navigation}) {
           </View>
           <View style={styles.itemTextRightContainer}>
             <Text style={{...styles.itemText, fontWeight: 'bold', fontSize: 14}}>
-              {selectedInvoice.amount_received}
+              {AppConstants.currencySymbol}{selectedInvoice.amount_received}
             </Text>
           </View>
           <View style={styles.itemTextLeftContainer}>
@@ -122,7 +116,7 @@ function InvoiceScreen({navigation}) {
           </View>
           <View style={styles.itemTextRightContainer}>
             <Text style={{...styles.itemText, fontWeight: 'bold', fontSize: 14}}>
-              {(selectedInvoice.total - selectedInvoice.amount_received) || 0}
+              {AppConstants.currencySymbol}{(selectedInvoice.total - selectedInvoice.amount_received) || 0}
             </Text>
           </View>
         </View> : null}

@@ -3,6 +3,7 @@ import { StyleSheet, FlatList, View, Text, Keyboard } from 'react-native'
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Button, Provider, TextInput } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import moment from 'moment';
 
 import AddInvoiceItemComponent from '../components/AddInvoiceItemComponent';
 import InvoiceItemComponent from '../components/InvoiceItemComponent';
@@ -10,6 +11,8 @@ import MenuComponent from '../components/MenuComponent';
 
 import AddCustomerComponent from '../components/AddCustomerComponent';
 import * as restClient from '../lib/restclient';
+import AppConstants from '../../AppConstants';
+import DialogAlert from '../components/DialogComponent';
 
 function AddInvoiceScreen({navigation}) {
     const [showItemsModalComponent, setShowItemsModalComponent] = useState(false);
@@ -43,7 +46,7 @@ function AddInvoiceScreen({navigation}) {
     useLayoutEffect(() => {
         navigation.setOptions({
             headerRight: () => (
-                <Button onPress={submitInvoice} disabled={ (selectedCustomer === "" || allInvoiceItems.length === 0) }>Submit</Button>
+                <Button color={AppConstants.buttonColor} onPress={submitInvoice} disabled={ (selectedCustomer === "" || allInvoiceItems.length === 0) }>Submit</Button>
             )
         });
     }, [navigation, selectedCustomer, allInvoiceItems]);
@@ -54,6 +57,10 @@ function AddInvoiceScreen({navigation}) {
             setCustomers(items);
           }).catch((error) => {
             console.log("Get Customers Error: ", error);
+            if(error.response.status === 401) {
+                navigation.popToTop();
+                navigation.replace("Login");
+            }
           });
     }, []);
       
@@ -73,7 +80,7 @@ function AddInvoiceScreen({navigation}) {
     }
 
     function formatInvoiceDate(selectedDate) {
-        let custom = selectedDate.toISOString().split('T')[0];
+        let custom = moment(selectedDate).format(AppConstants.dateFormat);
         setSelectedInvoiceDate(custom)
     }
 
@@ -123,16 +130,36 @@ function AddInvoiceScreen({navigation}) {
         });
 
         let invoice = {
-            invoice_date: selectedInvoiceDate,
+            invoice_date: moment(selectedInvoiceDate, AppConstants.dateFormat).format(AppConstants.serverDateFormat),
             mobile_no: selectedCustomer.phone,
             employee: selectedCustomer.employeeNo,
             customer: selectedCustomer.id,
             amount_received : 0,
             items: items
         };
-        let response = await restClient.createInvoice(invoice);
-        if(response.data) {
-            navigation.navigate("Invoice");
+        try {
+            let response = await restClient.createInvoice(invoice);
+            if(response.data) {
+                DialogAlert.show({
+                    title: "Invoice created",
+                    description: "Invoice created successfully"
+                });
+                navigation.navigate('MenuDrawer', { screen: 'Home' });
+            }
+        } catch(error) {
+            console.log("Error creating invoice: ", error);
+            if(error.response.status === 401) {
+                DialogAlert.show({
+                    title: "Session expired",
+                    description: "Session expired, please login again"
+                });
+                navigation.navigate("Login");
+            } else {
+                DialogAlert.show({
+                    title: "Invoice failed",
+                    description: "Invoice creation failed, please try again"
+                });
+            }
         }
     }
 
@@ -148,7 +175,7 @@ function AddInvoiceScreen({navigation}) {
                             key={"customerMenu"}
                             customStyle={{marginBottom: 10}}
                         />
-                        <Button onPress={handleAddCustomer} style={{alignContent: 'center', marginBottom: 10, marginLeft: 10, backgroundColor: '#f3f3f3'}}>Add Customer</Button>
+                        <Button color={AppConstants.buttonColor} onPress={handleAddCustomer} style={{alignContent: 'center', marginBottom: 10, marginLeft: 10, backgroundColor: '#f3f3f3'}}>Add Customer</Button>
                     </View>
                     <TextInput
                         label={"Date"}
@@ -164,12 +191,12 @@ function AddInvoiceScreen({navigation}) {
                             onChange={onChange}
                         />
                     ) : null}
-                    <Button onPress={handleAddItems} style={{maxWidth: 350, marginBottom: 10}}>Add Items</Button>
+                    <Button color={AppConstants.buttonColor} onPress={handleAddItems} style={{maxWidth: 350, marginBottom: 10}}>Add Items</Button>
                     <View style={styles.invoiceItems}>
                         <FlatList
                             data={allInvoiceItems}
                             renderItem = {renderItem}
-                            keyExtractor = {item => item.id}
+                            keyExtractor = {(item, index) => `${item.id}+${index}`}
                         />
                     </View>
                     <AddInvoiceItemComponent showModal={showAddItemsModal} addItems={handleAddedItem} visible={showItemsModalComponent} />
@@ -178,12 +205,12 @@ function AddInvoiceScreen({navigation}) {
                 {allInvoiceItems.length > 0 ? <View style={[styles.invoiceSummaryContainer]}>
                     <View style={styles.itemTextLeftContainer}>
                         <Text style={{...styles.itemText, fontWeight: 'bold', fontSize: 18}}>
-                        Total Amount
+                            Total Amount
                         </Text>
                     </View>
                     <View style={styles.itemTextRightContainer}>
                         <Text style={{...styles.itemText, fontWeight: 'bold', fontSize: 18}}>
-                            {totalAmount}
+                            {AppConstants.currencySymbol}{totalAmount}
                         </Text>
                     </View>
                 </View> : null}
@@ -196,9 +223,7 @@ const styles = StyleSheet.create({
     container: {
         backgroundColor: '#fff',
         padding: 20,
-        flexDirection: 'column',
-        //flex: 1,
-        //alignItems: 'center'
+        flexDirection: 'column'
     },
     customerGroup: {
         flexDirection: 'row'
@@ -213,7 +238,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#f3f3f3',
         flexDirection: 'row',
         flexWrap: 'wrap',
-        //flex: 1,
         marginTop: 10,
         padding: 10,
         justifyContent: 'center',

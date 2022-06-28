@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { View, StyleSheet } from 'react-native'
 import { Button, Modal, Portal, TextInput, Text } from 'react-native-paper';
 import * as restClient from '../lib/restclient';
+import AppConstants from '../../AppConstants';
 
 function AddCustomerComponent(props) {
     const [customerName, setCustomerName] = useState("");
@@ -88,8 +89,8 @@ function AddCustomerComponent(props) {
                         />
                         <Text style={{color: "tomato"}}>{errorMessage}</Text>
                         <View style={styles.formButtons}>
-                            <Button onPress={handleAddCustomer}>Add</Button>
-                            <Button onPress={hideModal}>Cancel</Button>
+                            <Button color={AppConstants.buttonColor} onPress={handleAddCustomer}>Add</Button>
+                            <Button color={AppConstants.buttonColor} onPress={hideModal}>Cancel</Button>
                         </View>
                     </View>
                 </Modal>

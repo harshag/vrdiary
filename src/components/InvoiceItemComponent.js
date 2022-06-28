@@ -1,9 +1,17 @@
 import React from 'react'
 import { View, Text, StyleSheet } from 'react-native'
+import AppConstants from '../../AppConstants';
 
 function InvoiceItemComponent(invoiceItem) {
   let item = invoiceItem;
   let totalPrice = item.invoiceItem.quantity * item.invoiceItem.price;
+
+  const priceAfterGST = () => {
+    let type = item.invoiceItem.item.tax_code.tax_type;
+    if (type.toLowerCase() == 'inclusive') return totalPrice;
+
+    return totalPrice + ((totalPrice * item.invoiceItem.item.tax_code.tax_percent) / 100);
+  }
   
   return (
     <View style={styles.container}>
@@ -15,7 +23,7 @@ function InvoiceItemComponent(invoiceItem) {
         </View>
         <View style={styles.itemTextRightContainer}>
           <Text style={{...styles.itemText, fontWeight: 'bold', fontSize: 18}}>
-            {item.invoiceItem.price}
+            {AppConstants.currencySymbol}{item.invoiceItem.price}
           </Text>
         </View>
         <View style={styles.itemTextLeftContainer}>
@@ -25,27 +33,27 @@ function InvoiceItemComponent(invoiceItem) {
         </View>
         <View style={styles.itemTextRightContainer}>
           <Text style={styles.itemText}>
-            {item.invoiceItem.quantity} x {item.invoiceItem.price} = {totalPrice}
+            {item.invoiceItem.quantity} x {item.invoiceItem.price} = {AppConstants.currencySymbol}{totalPrice}
           </Text>
         </View>
         <View style={styles.itemTextLeftContainer}>
-          <Text style={{...styles.itemText, color: 'gold'}}>
+          <Text style={{...styles.itemText, color: '#00A150'}}>
             Free Quantity
           </Text>
         </View>
         <View style={styles.itemTextRightContainer}>
-          <Text style={{...styles.itemText, color: 'gold'}}>
-            {item.invoiceItem.free_quantity}
+          <Text style={{...styles.itemText, color: '#00A150'}}>
+            {item.invoiceItem.free_quantity || 0}
           </Text>
         </View>
         <View style={styles.itemTextLeftContainer}>
           <Text style={styles.itemText}>
-            Tax GST:
+            GST: {item.invoiceItem.item.tax_code.tax_type} {item.invoiceItem.item.tax_code.tax_percent}%
           </Text>
         </View>
         <View style={styles.itemTextRightContainer}>
           <Text style={styles.itemText}>
-            {item.invoiceItem.item.tax_code.tax_type} {item.invoiceItem.item.tax_code.tax_percent}
+            {AppConstants.currencySymbol}{(totalPrice * item.invoiceItem.item.tax_code.tax_percent) / 100}
           </Text>
         </View>
         <View style={styles.itemTextLeftContainer}>
@@ -55,7 +63,7 @@ function InvoiceItemComponent(invoiceItem) {
         </View>
         <View style={styles.itemTextRightContainer}>
           <Text style={styles.itemText}>
-            {item.invoiceItem.amount}
+            {AppConstants.currencySymbol}{priceAfterGST()}
           </Text>
         </View>
       </View>
@@ -81,11 +89,11 @@ const styles = StyleSheet.create({
     borderColor: '#ededed'
   },
   itemTextLeftContainer: {
-    width: '60%',
+    width: '50%',
     alignContent: 'flex-start'
   },
   itemTextRightContainer: {
-    width: '40%',
+    width: '50%',
     alignItems: 'flex-end'
   },
   itemText: {

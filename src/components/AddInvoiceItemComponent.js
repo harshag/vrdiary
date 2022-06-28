@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 import { Button, Modal, Portal, TextInput } from 'react-native-paper';
+import AppConstants from '../../AppConstants';
 
 import MenuComponent from './MenuComponent';
 import * as restClient from '../lib/restclient';
@@ -44,6 +45,11 @@ function AddInvoiceItemComponent(props) {
             setErrorMessage("Enter all values");
             return;
         }
+        let totalAmount = selectedItem.price * qty;
+        let taxType = selectedItem.tax_code?.tax_type;
+        if (taxType?.toLowerCase() === 'exclusive') {
+            totalAmount = totalAmount + ((totalAmount * selectedItem.tax_code?.tax_percent) / 100);
+        } 
         props.addItems({
             item: {
                 ...selectedItem
@@ -51,7 +57,7 @@ function AddInvoiceItemComponent(props) {
             quantity: qty,
             free_quantity: freeQty,
             price: selectedItem.price,
-            amount: selectedItem.price * qty
+            amount: totalAmount
         });
 
         hideModal();
@@ -91,8 +97,8 @@ function AddInvoiceItemComponent(props) {
                             mode={'outlined'}
                         />
                         <View style={styles.formButtons}>
-                            <Button onPress={handleAddItem}>Add</Button>
-                            <Button onPress={hideModal}>Cancel</Button>
+                            <Button color={AppConstants.buttonColor} onPress={handleAddItem}>Add</Button>
+                            <Button color={AppConstants.buttonColor} onPress={hideModal}>Cancel</Button>
                         </View>
                         <Text style={{color: "tomato"}}>{errorMessage}</Text>
                     </View>

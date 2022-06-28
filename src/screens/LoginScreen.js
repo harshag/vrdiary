@@ -4,6 +4,7 @@ import { Button, TextInput } from 'react-native-paper';
 import * as SecureStore from 'expo-secure-store';
 
 import * as restClient from '../lib/restclient';
+import AppConstants from '../../AppConstants';
 
 function LoginScreen({navigation}) {
   const [username, setUsername] = useState("");
@@ -42,6 +43,7 @@ function LoginScreen({navigation}) {
           mode={'outlined'}
           autoFocus={true}
           style={styles.formElement}
+          theme={{ colors: { primary: AppConstants.buttonColor } }}
         />
         <TextInput
           label={"Password"}
@@ -50,8 +52,9 @@ function LoginScreen({navigation}) {
           mode={'outlined'}
           secureTextEntry={true}
           style={styles.formElement}
+          theme={{ colors: { primary: AppConstants.buttonColor } }}
         />
-        <Button onPress={handleLogin} style={styles.formElement}>Login</Button>
+        <Button color={AppConstants.buttonColor} onPress={handleLogin} style={styles.formElement}>Login</Button>
     </View>
   )
 }
@@ -59,7 +62,6 @@ function LoginScreen({navigation}) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    //alignItems: 'center',
     padding: 20
   },
   formElement: {

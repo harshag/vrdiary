@@ -9,13 +9,15 @@ import LoginScreen from './src/screens/LoginScreen';
 import InvoiceScreen from './src/screens/InvoiceScreen';
 import AddInvoiceScreen from './src/screens/AddInvoiceScreen';
 import LogoutScreen from './src/screens/LogoutScreen';
+import LandingScreen from './src/screens/LandingScreen';
 
 const MenuDrawer = () => {
   const Drawer = createDrawerNavigator();
   return (
-    <Drawer.Navigator>
-      <Drawer.Screen name="Invoice" component={InvoiceScreen} />
-      <Drawer.Screen name="Add Invoice" component={AddInvoiceScreen} />
+    <Drawer.Navigator initialRouteName="Home">
+      <Drawer.Screen name="Home" component={LandingScreen} options={{title: "Dashborad"}}/>
+      <Drawer.Screen name="View invoice" component={InvoiceScreen} />
+      <Drawer.Screen name="Create invoice" component={AddInvoiceScreen} />
       <Drawer.Screen name="Logout" component={LogoutScreen} />
     </Drawer.Navigator>
   )
@@ -26,10 +28,11 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="MenuDrawer">
+        <Stack.Screen name="Home" component={LandingScreen}/>
         <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Invoice" component={InvoiceScreen} />
-        <Stack.Screen name="AddInvoice" component={AddInvoiceScreen} />
-        <Stack.Screen name="MenuDrawer" component={MenuDrawer} options={{ headerShown: false }}/>
+        <Stack.Screen name="Invoice" component={InvoiceScreen} options={{title: "View Invoice"}} />
+        <Stack.Screen name="AddInvoice" component={AddInvoiceScreen} options={{title: "Create Invoice"}} />
+        <Stack.Screen name="MenuDrawer" component={MenuDrawer} options={{ headerShown: false }} />
       </Stack.Navigator>
     </NavigationContainer>
   );
